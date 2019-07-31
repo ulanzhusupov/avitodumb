@@ -38,6 +38,12 @@
 
 
 /********* Product card ***************/
+.margin-bottom {
+  margin-bottom: 10px;
+}
+.card {
+  height: 370px;
+}
 .card:hover {
   cursor: pointer;
 }

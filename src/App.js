@@ -1,43 +1,82 @@
 import React, { useEffect, useState } from 'react';
 
 
-
-  
 function App() {
   const [products, setProducts] = useState([]);
+  const [productsLink, setProductsLink] = useState("");
+  const [favourites, setFavourites] = useState([]);
+
+  const categories = [
+    {
+      'short': 'auto',
+      'title': 'Автомобили',
+      'icon': <i className="fa fa-car"></i>
+    },
+    {
+      'short': 'immovable',
+      'title': 'Недвижимость',
+      'icon': <i className="fa fa-home"></i>
+    },
+    {
+      'short': 'cameras',
+      'title': 'Фотокамеры',
+      'icon': <i className="fa fa-camera"></i>
+    },
+    {
+      'short': 'laptops',
+      'title': 'Ноутбуки',
+      'icon': <i className="fa fa-laptop"></i>
+    },
+
+  ]
 
   const getProducts = (url) => {
-    fetch(url)
-      .then(resp => resp.json())
+    fetch(url, {
+      headers : { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+       }
+    }).then(resp => resp.json())
       .then(json => {
         setProducts(json.data);
       });
-  };
-
-  const formatPrice = (badPrice) => {
-    // return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') - from stackoverflow
-    return badPrice ? badPrice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') : "";
-    
   };
 
   useEffect(() => {
     fetch('https://avito.dump.academy/')
       .then(resps => resps.json())
       .then(json => {
-        getProducts(json.links.products);
+        setProductsLink(json.links.products);
+        getProducts(productsLink);
       });
   }, []);
+
+  const formatPrice = (badPrice) => {
+    // return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') - from stackoverflow
+    return badPrice ? badPrice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ') : "";
+  };
+
+  const filterFromCategory = (category) => {
+    if(category === 'all') {
+      return getProducts(productsLink);
+    }
+    setProducts(products.filter(product => product.category === category));
+  }
 
   return ( 
     <div className="container" style={{marginTop: '50px'}}>
       <div className="row">
         <div className="col-md-3">
           <ul className="list-group">
-            <li className="list-group-item">Автомобили <i className="fa fa-car"></i></li>
-            <li className="list-group-item">Недвижимость <i className="fa fa-home"></i></li>
-            <li className="list-group-item">Ноутбуки <i className="fa fa-laptop"></i></li>
-            <li className="list-group-item">Фотокамеры <i className="fa fa-camera"></i></li>
-            <li className="list-group-item">Избранное <i className="fa fa-star"></i></li>
+            {/* Показать все в случае надоедания одной категории */}
+            <li className="list-group-item" onClick={() => filterFromCategory('all')}><i className="fa fa-bars"></i> Все</li>
+            
+            {categories ? categories.map(category => (
+              <li className="list-group-item" onClick={() => filterFromCategory(category.short)}>{category.icon} {category.title}</li>
+            )) : <li className="list-group-item">No categories <i className="fa fa-error"></i></li>}
+            
+            {/* Категория избранных */}
+            <li className="list-group-item"><i className="fa fa-star"></i> Избранное</li>
           </ul>
           <div className="price-filter-block">
             <span className="price">Цена</span>
@@ -64,10 +103,9 @@ function App() {
           </ul>
 
           <div className="row" style={{marginTop: '30px'}}>
-            {console.log("Div", products)}
             {products ? (
               products.map(product => (
-              <div className="col-md-4">
+              <div className="col-md-4 margin-bottom">
                   <div className="card">
                     <div className="card-img-top">
                       <ul className="product-img-sliders">
@@ -83,8 +121,11 @@ function App() {
                     </div>
                     <div className="card-body">
                       <h5 className="card-title">{product.title}</h5>
-                      <p className="card-price">{formatPrice(product.price)}</p>
+                      <p className="card-price">{formatPrice(product.price)} руб</p>
                       {/* <p className="card-address">{product.address}</p> */}
+                      {/* <p className="card-seller"></p> */}
+                      {/* <div className="card-rank"></div> */}
+                      <button className="btn"><i className="fa fas-heart"></i></button>
                     </div>
                   </div>
                 </div>)
