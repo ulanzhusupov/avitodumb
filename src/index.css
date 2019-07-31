@@ -38,13 +38,21 @@
 
 
 /********* Product card ***************/
+.card:hover {
+  cursor: pointer;
+}
+.card:hover ~ .product-img-slider::after {
+  display: block;
+}
 .product-img-sliders {
   list-style-type: none;
   display: flex;
   padding: 0;
   margin: 0;
   position: relative;
-  height: 252px;
+  max-height: 252px;
+  min-height: 252px;
+  height: 100%;
 }
 .product-img-slider {
   flex-basis: 50%;
@@ -52,18 +60,30 @@
 }
 .product-img-slider::after {
   content: '';
+  display: none;
   width: 100%;
   height: 2px;
+  margin: 0 1px 2px;
+  background-color: rgba(232,232,232,.8);
+  -webkit-transition: background-color .3s;
+  transition: background-color .3s;
 }
 .product-img-slider:first-child > .product-img-block {
   opacity: 1;
+}
+.product-img-slider:hover {
+  cursor: pointer;
+}
+.product-img-slider:hover ~ .product-img-block {
+  opacity: 1;
+  left: 0;
 }
 
 .product-img-block {
   position: absolute;
   opacity: 0;
-  width: 252px;
-  height: 252px;
+  width: 100%;
+  height: 100%;
 }
 .product-img {
   max-width: 100% !important;

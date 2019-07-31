@@ -1,23 +1,33 @@
-import React, {useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 
-function getProducts(url) {
-  fetch(url)
-    .then(resp => resp.json())
-    .then(json => {
-      console.log(json)
-    })
-}
 
-const App = () => {
-  let productsLink = "";
+
+  
+function App() {
+  const [products, setProducts] = useState([]);
+
+  const getProducts = (url) => {
+    fetch(url)
+      .then(resp => resp.json())
+      .then(json => {
+        setProducts(json.data);
+      });
+  };
+
+  const formatPrice = (badPrice) => {
+    // return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') - from stackoverflow
+    return badPrice ? badPrice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') : "";
+    
+  };
+
   useEffect(() => {
     fetch('https://avito.dump.academy/')
       .then(resps => resps.json())
       .then(json => {
-        productsLink = json.links.products;
-        getProducts(productsLink);
+        getProducts(json.links.products);
       });
-  }, [])
+  }, []);
+
   return ( 
     <div className="container" style={{marginTop: '50px'}}>
       <div className="row">
@@ -39,12 +49,12 @@ const App = () => {
           </div>
         </div>
         <div className="col-md-9">
-          <ul class="nav">
-            <li class="nav-item">
-              <h3 class="nav-link ">Сортировать по:</h3>
+          <ul className="nav">
+            <li className="nav-item">
+              <h3 className="nav-link ">Сортировать по:</h3>
             </li>
-            <li class="nav-item">
-            <select class="custom-select mr-sm-2" id="inlineFormCustomSelect">
+            <li className="nav-item">
+            <select className="custom-select mr-sm-2" id="inlineFormCustomSelect">
               <option selected>По умолчанию</option>
               <option value="Сначала популярные">Сначала популярные</option>
               <option value="Сначала дешевые">Сначала дешевые</option>
@@ -54,35 +64,33 @@ const App = () => {
           </ul>
 
           <div className="row" style={{marginTop: '30px'}}>
-            <div className="col-md-4">
-              <div class="card">
-                <div class="card-img-top">
-                  <ul className="product-img-sliders">
-                    <li className="product-img-slider">
-                      <div className="product-img-block">
-                        <img src="https://loremflickr.com/cache/resized/65535_48136294382_65ac01f286_z_400_400_nofilter.jpg" alt="" className="product-img"/>
-
-                      </div>
-                    </li>
-                    <li className="product-img-slider">
-                      <div className="product-img-block">
-                        <img src="https://loremflickr.com/cache/resized/65535_46991597014_0aa986de0f_z_400_400_nofilter.jpg" alt="" className="product-img"/>
-                      </div>
-                    </li>
-                    <li className="product-img-slider">
-                      <div className="product-img-block">
-                        <img src="https://loremflickr.com/cache/resized/65535_48228214407_4f6a8567f5_z_400_400_nofilter.jpg" alt="" className="product-img"/>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                <div class="card-body">
-                  <h5 class="card-title">Card title</h5>
-                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                  <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-              </div>
-            </div>
+            {console.log("Div", products)}
+            {products ? (
+              products.map(product => (
+              <div className="col-md-4">
+                  <div className="card">
+                    <div className="card-img-top">
+                      <ul className="product-img-sliders">
+                        {product.pictures.map(picture => (
+                          <li className="product-img-slider">
+                            <div className="product-img-block">
+                              <img src={picture} alt="" className="product-img"/>
+                            </div>
+                          </li>)
+                        )}
+                        
+                      </ul>
+                    </div>
+                    <div className="card-body">
+                      <h5 className="card-title">{product.title}</h5>
+                      <p className="card-price">{formatPrice(product.price)}</p>
+                      {/* <p className="card-address">{product.address}</p> */}
+                    </div>
+                  </div>
+                </div>)
+              )
+            ) : <div className="alert-warning">Problem with "products" array</div>}
+            
           </div>
         </div>
       </div>
