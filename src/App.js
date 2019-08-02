@@ -24,6 +24,8 @@ class App extends React.Component {
       products: [],
       sellers: [],
       allLinks: {},
+      priceValueFrom: "",
+      priceValueTo: "",
       categories: [
         {
           'short': 'auto',
@@ -49,34 +51,44 @@ class App extends React.Component {
       priceFiltered: []
     }
 
-    this.getProducts = this.getProducts.bind(this);
+    this.getData = this.getData.bind(this);
     this.getSellers = this.getSellers.bind(this);
     this.formatPrice = this.formatPrice.bind(this);
     this.filterFromCategory = this.filterFromCategory.bind(this);
     this.handleFilterPrice = this.handleFilterPrice.bind(this);
   }
 
-  componentDidMount() {
-    fetch('https://avito.dump.academy/')
+  async componentDidMount() {
+    await fetch('https://avito.dump.academy/products')
       .then(resps => resps.json())
       .then(json => {
-        this.getProducts(json.links.products);
-        this.getSellers(json.links.sellers);
-        
+        this.setState({
+          products: json.data
+        });
+      });
+
+    await fetch('https://avito.dump.academy/sellers')
+      .then(resps => resps.json())
+      .then(json => {
+        this.setState({
+          sellers: json.data
+        });
       });
   }
+
+  getData(target) {
     
+  }
 
-  getProducts(url){
-    console.log(url);
+  // getProducts(url){
 
-    fetch(url)
-      .then(resp => resp.json())
-      .then(json => {
-        this.setState({products: json.data});
-      })
-      .catch(err => console.log(err));
-  };
+  //   fetch(url)
+  //     .then(resp => resp.json())
+  //     .then(json => {
+  //       this.setState({products: json.data});
+  //     })
+  //     .catch(err => console.log(err));
+  // };
 
   getSellers(url) {
     console.log(url)
@@ -99,18 +111,30 @@ class App extends React.Component {
 
   filterFromCategory(category){
     if(category === 'all') {
-      return this.getProducts('https://avito.dump.academy/products');
+      return this.getData('products');
     }
-    // setProducts(products.filter(product => product.category === category));
+    this.setState({products: this.state.products.filter(product => product.category === category)});
   }
 
   handleFilterPrice(event){
-    if(/^\d+$/.test(event.target.value) === false) {
+    const products = [...this.state.products];
+
+    if(/^\d+$/.test(event.target.value) === false && event.target.value != "") {
       alert("Введите цену в цифрах!")
-    }if(event.target.id === "from") {
-      // setPriceFiltered(products.filter(product => product.price > parseInt(event.target.value)));
-    } else if(event.target.id === "to") {
-      // setPriceFiltered(products.filter(product => product.price < parseInt(event.target.value)));
+      this.setState({[event.target.id]: ""})
+
+    }
+    if(event.target.id === "priceValueFrom") {
+      this.setState({
+        priceValueFrom: event.target.value,
+        priceFiltered: products.filter(product => product.price > parseInt(event.target.value))
+      });
+
+    } else if(event.target.id === "priceValueTo") {
+      this.setState({
+        priceValueTo: event.target.value,
+        priceFiltered: products.filter(product => product.price < parseInt(event.target.value))
+      });
     }
   };
 
@@ -129,14 +153,14 @@ class App extends React.Component {
     const {allLinks, products, sellers, categories, priceFiltered} = this.state;
     return (
       <div className="container" style={{marginTop: '50px'}}>
-        {console.log(allLinks)}
         <div className="row">
           <div className="col-md-3">
             <ul className="list-group">
               {/* Показать все в случае надоедания одной категории */}
               <li className="list-group-item" onClick={this.filterFromCategory('all')}><i className="fa fa-bars"></i> Все</li>
-              
-              {categories ? categories.map(category => (
+              {console.log('sellers', sellers)}
+              {console.log('products', products)}
+              {categories.length > 0 ? categories.map(category => (
                 <li className="list-group-item" onClick={this.filterFromCategory(category.short)}>{category.icon} {category.title}</li>
               )) : <li className="list-group-item">No categories <i className="fa fa-error"></i></li>}
               
@@ -146,8 +170,8 @@ class App extends React.Component {
             <div className="price-filter-block">
               <span className="price">Цена</span>
               <div className="price-filter-block-inputs">
-                <input id="from" onChange={(e) => handleFilterPrice(e)} type="text" className="price-input" placeholder="от"/>
-                <input id="to" onChange={(e) => handleFilterPrice(e)} type="text" className="price-input" placeholder="до"/>
+                <input id="priceValueFrom" value={this.state.priceValueFrom} onChange={this.handleFilterPrice} type="text" className="price-input" placeholder="от"/>
+                <input id="priceValueTo" value={this.state.priceValueTo} onChange={this.handleFilterPrice} type="text" className="price-input" placeholder="до"/>
               </div>
               <button className="btn btn-primary" onClick={this.handleShowPriceFiltered}>Показать {priceFiltered.length} объявлений</button>
             </div>
@@ -188,10 +212,11 @@ class App extends React.Component {
                         <h5 className="card-title">{product.title}</h5>
                         <p className="card-price">{this.formatPrice(product.price)} руб</p>
                         {/* <p className="card-address">{product.address}</p> */}
+                        {/* {sellers} */}
                         <p className="card-seller">
-                          {sellers ? sellers[parseInt(product.relationships.seller)].name : ""}
+                          {sellers.length > 0 ? sellers[parseInt(product.relationships.seller)].name : ""}
                           {" "}
-                          {sellers ? "("+sellers[parseInt(product.relationships.seller)].rating+")" : ""}
+                          {sellers.length > 0 ? "("+sellers[parseInt(product.relationships.seller)].rating+")" : ""}
                         </p>
                         {/* <div className="card-rank"></div> */}
                         <button className="btn"><i className="fa fas-heart"></i></button>
