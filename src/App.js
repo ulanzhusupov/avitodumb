@@ -6,16 +6,49 @@ import {
   sellersLoaded,
   addFavoriteProduct
 } from "./actions";
+import Categories from './categories';
 
+
+function addToFavorite(product) {
+  
+  let serialObj = JSON.stringify(product);
+
+  return localStorage.setItem(product.id, serialObj);
+}
+
+function showProducts(product, formatPrice, sellers) {
+  return (
+    <div key={product.id} className="col-md-4 margin-bottom">
+      <div className="card">
+        <div className="card-img-top">
+          <ul className="product-img-sliders">
+            {product.pictures.map((picture, i) => (
+              <li key={i} className="product-img-slider">
+                <div className="product-img-block">
+                  <img src={picture} alt="" className="product-img"/>
+                </div>
+              </li>)
+            )}
+          </ul>
+        </div>
+        <div className="card-body">
+          <h5 className="card-title"><a href="#">{product.title}</a></h5>
+          
+          {/* {sellers} */}
+          <p className="card-seller">
+            {sellers.length > 0 ? sellers[parseInt(product.relationships.seller)].name : ""}
+            {" "}
+            {sellers.length > 0 ? "("+sellers[parseInt(product.relationships.seller)].rating+")" : ""}
+          </p>
+          <p className={formatPrice !== "" ? "card-price" : "price-none"}>{formatPrice !== "" ? formatPrice + "руб" : "Нет цены"}</p>
+          <p className="favorite" onClick={() => addToFavorite(product)}><i className="far fa-heart"></i></p>
+        </div>
+      </div>
+    </div>        
+  )
+};
 
 class App extends React.Component {
-  // const [allLinks, setAllLinks] = useState()
-  // const [products, setProducts] = useState([]);
-  // const [productsLink, setProductsLink] = useState();
-  // const [sellers, setSellers] = useState([]);
-  // const [priceFiltered, setPriceFiltered] = useState([]);
-
-  // const [sortValue, setSortValue] = useState("");
   
   constructor(props) {
     super(props);
@@ -23,36 +56,14 @@ class App extends React.Component {
     this.state = {
       products: [],
       sellers: [],
-      allLinks: {},
       priceValueFrom: "",
       priceValueTo: "",
-      categories: [
-        {
-          'short': 'auto',
-          'title': 'Автомобили',
-          'icon': <i className="fa fa-car"></i>
-        },
-        {
-          'short': 'immovable',
-          'title': 'Недвижимость',
-          'icon': <i className="fa fa-home"></i>
-        },
-        {
-          'short': 'cameras',
-          'title': 'Фотокамеры',
-          'icon': <i className="fa fa-camera"></i>
-        },
-        {
-          'short': 'laptops',
-          'title': 'Ноутбуки',
-          'icon': <i className="fa fa-laptop"></i>
-        },
-      ],
-      priceFiltered: []
+      filtered: [],
+      sorted: [],
+      favorites: [],
+      sortValue: "",
     }
 
-    this.getData = this.getData.bind(this);
-    this.getSellers = this.getSellers.bind(this);
     this.formatPrice = this.formatPrice.bind(this);
     this.filterFromCategory = this.filterFromCategory.bind(this);
     this.handleFilterPrice = this.handleFilterPrice.bind(this);
@@ -74,106 +85,108 @@ class App extends React.Component {
           sellers: json.data
         });
       });
+    let localStorageValues = [],
+        keys = Object.keys(localStorage);
+    for(let i = 0; i < keys.length; i++) {
+      let item = localStorage.getItem(keys[i]);
+      localStorageValues.push(JSON.parse(item));
+    }
+    this.setState({favorites: localStorageValues});
   }
-
-  getData(target) {
-    
-  }
-
-  // getProducts(url){
-
-  //   fetch(url)
-  //     .then(resp => resp.json())
-  //     .then(json => {
-  //       this.setState({products: json.data});
-  //     })
-  //     .catch(err => console.log(err));
-  // };
-
-  getSellers(url) {
-    console.log(url)
-    fetch(url)
-      .then(resp => resp.json())
-      .then(json => {
-        this.setState({sellers: json.data})
-      })
-      .catch(err => console.log(err));
-  };
-
-  // useEffect(() => {
-  //   
-  // }, []);
 
   formatPrice(badPrice) {
     // return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') - from stackoverflow
     return badPrice ? badPrice.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ') : "";
   };
 
-  filterFromCategory(category){
-    if(category === 'all') {
-      return this.getData('products');
+  filterFromCategory(e){
+    if(e.target.id === 'all') {
+      this.setState({filtered: this.state.products});
+      return;
     }
-    this.setState({products: this.state.products.filter(product => product.category === category)});
+    let categFilt = this.state.products.filter(prd => prd.category === e.target.id);
+    this.setState({filtered: categFilt});
   }
 
   handleFilterPrice(event){
-    const products = [...this.state.products];
+    console.log("sorted", this.state.sorted)
+    const products = this.state.sorted.length ?
+                      [...this.state.sorted] :
+                      this.state.filtered.length > 0 ?
+                      [...this.state.filtered] :
+                      [...this.state.products];
 
     if(/^\d+$/.test(event.target.value) === false && event.target.value != "") {
       alert("Введите цену в цифрах!")
-      this.setState({[event.target.id]: ""})
+      this.setState({[event.target.id]: ""});
 
     }
     if(event.target.id === "priceValueFrom") {
       this.setState({
         priceValueFrom: event.target.value,
-        priceFiltered: products.filter(product => product.price > parseInt(event.target.value))
+        filtered: products.filter(product => product.price > parseInt(event.target.value))
       });
 
     } else if(event.target.id === "priceValueTo") {
       this.setState({
         priceValueTo: event.target.value,
-        priceFiltered: products.filter(product => product.price < parseInt(event.target.value))
+        filtered: products.filter(product => product.price < parseInt(event.target.value))
       });
     }
   };
 
-  handleShowPriceFiltered = () => {
-    this.setState({products: this.state.priceFiltered});
+  handleShowfiltered = () => {
+    return;
   };
 
-  handleSortChange = (value) => {
-    if(value === "popular") {
-      return getProducts(productsLink);
-    } else if(value === "cheaps") {
-      return products.reduce((prev, current) => current.price > prev.price);
+  handleSortChange = (e) => {
+    console.log(e.target.value)
+    const { products, filtered, sorted, sellers} = this.state;
+
+    let sortArr = sorted.length > 0 ? sorted : filtered.length > 0 ? filtered : products;
+    
+    if(e.target.value === "popular") {
+      let sellersRating = sellers.sort((a, b) => parseFloat(a.rating - b.rating)).reverse();
+      console.log(sellersRating)
+      
+      this.setState({
+        sortValue: e.target.value,
+        sorted: popularSort
+      })
+
+    } else if(e.target.value === "cheaps") {
+
+      let cheapSort = sortArr.sort((a, b) => (a.price < b.price) ? -1 : (a.price > b.price) ? 1 : 0);
+      this.setState({
+        sortValue: e.target.value,
+        sorted: cheapSort
+      });
+
+    } else if(e.target.value === "expensive") {
+
+      let expensiveSort = sortArr.sort((a, b) => a.price - b.price).reverse();
+      this.setState({
+        sortValue: e.target.value,
+        sorted: expensiveSort
+      });
+
     }
   }
   render() {
-    const {allLinks, products, sellers, categories, priceFiltered} = this.state;
+    const {products, sellers, filtered, sorted, sortValue} = this.state;
+
     return (
       <div className="container" style={{marginTop: '50px'}}>
         <div className="row">
           <div className="col-md-3">
-            <ul className="list-group">
-              {/* Показать все в случае надоедания одной категории */}
-              <li className="list-group-item" onClick={this.filterFromCategory('all')}><i className="fa fa-bars"></i> Все</li>
-              {console.log('sellers', sellers)}
-              {console.log('products', products)}
-              {categories.length > 0 ? categories.map(category => (
-                <li className="list-group-item" onClick={this.filterFromCategory(category.short)}>{category.icon} {category.title}</li>
-              )) : <li className="list-group-item">No categories <i className="fa fa-error"></i></li>}
-              
-              {/* Категория избранных */}
-              <li className="list-group-item"><i className="fa fa-star"></i> Избранное</li>
-            </ul>
+            <Categories filterFromCategory={this.filterFromCategory} />
             <div className="price-filter-block">
               <span className="price">Цена</span>
               <div className="price-filter-block-inputs">
                 <input id="priceValueFrom" value={this.state.priceValueFrom} onChange={this.handleFilterPrice} type="text" className="price-input" placeholder="от"/>
                 <input id="priceValueTo" value={this.state.priceValueTo} onChange={this.handleFilterPrice} type="text" className="price-input" placeholder="до"/>
               </div>
-              <button className="btn btn-primary" onClick={this.handleShowPriceFiltered}>Показать {priceFiltered.length} объявлений</button>
+              <button className="btn btn-primary" onClick={this.handleShowfiltered}>Показать {filtered.length} объявлений</button>
             </div>
           </div>
           <div className="col-md-9">
@@ -182,50 +195,28 @@ class App extends React.Component {
                 <h3 className="nav-link ">Сортировать по:</h3>
               </li>
               <li className="nav-item">
-              <select className="custom-select mr-sm-2" id="inlineFormCustomSelect">
-                <option>По умолчанию</option>
+              <select value={sortValue} onChange={this.handleSortChange} className="custom-select mr-sm-2" id="inlineFormCustomSelect">
                 <option value="popular">Сначала популярные</option>
                 <option value="cheaps">Сначала дешевые</option>
-                <option value="expensives">Сначала дорогие</option>
+                <option value="expensive">Сначала дорогие</option>
               </select>
               </li>
             </ul>
   
             <div className="row" style={{marginTop: '30px'}}>
-              {products ? (
+              {sorted.length > 0 ? (
+                sorted.map(product => (
+                  showProducts(product, this.formatPrice(product.price), sellers)
+                ))
+              ) : filtered.length > 0 ? (
+                filtered.map(product => (
+                  showProducts(product, this.formatPrice(product.price), sellers)
+                ))
+              ) : (
                 products.map(product => (
-                <div className="col-md-4 margin-bottom">
-                    <div className="card">
-                      <div className="card-img-top">
-                        <ul className="product-img-sliders">
-                          {product.pictures.map(picture => (
-                            <li className="product-img-slider">
-                              <div className="product-img-block">
-                                <img src={picture} alt="" className="product-img"/>
-                              </div>
-                            </li>)
-                          )}
-                          
-                        </ul>
-                      </div>
-                      <div className="card-body">
-                        <h5 className="card-title">{product.title}</h5>
-                        <p className="card-price">{this.formatPrice(product.price)} руб</p>
-                        {/* <p className="card-address">{product.address}</p> */}
-                        {/* {sellers} */}
-                        <p className="card-seller">
-                          {sellers.length > 0 ? sellers[parseInt(product.relationships.seller)].name : ""}
-                          {" "}
-                          {sellers.length > 0 ? "("+sellers[parseInt(product.relationships.seller)].rating+")" : ""}
-                        </p>
-                        {/* <div className="card-rank"></div> */}
-                        <button className="btn"><i className="fa fas-heart"></i></button>
-                      </div>
-                    </div>
-                  </div>)
-                )
-              ) : <div className="alert-warning">Problem with "products" array</div>}
-              
+                  showProducts(product, this.formatPrice(product.price), sellers)
+                ))
+              )}
             </div>
           </div>
         </div>

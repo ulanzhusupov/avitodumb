@@ -1,3 +1,6 @@
+p {
+  margin-bottom: 0;
+}
 .list-group-item {
   cursor: pointer;
 }
@@ -43,9 +46,6 @@
 }
 .card {
   height: 470px;
-}
-.card:hover {
-  cursor: pointer;
 }
 .card:hover ~ .product-img-slider::after {
   display: block;
@@ -95,4 +95,40 @@
   max-width: 100% !important;
   max-height: 100% !important;
   position: absolute;
+}
+.card-body {
+  padding: 0.55rem;
+  height: 220px;
+  position: relative;
+}
+
+.card-seller {
+  font-size: 12px;
+  font-weight: bold;
+  color: #007bff;
+}
+.card-price,.price-none {
+  padding: 5px 10px;
+  background-color: #3cd846;
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 300;
+  position: absolute;
+  bottom: 10px;
+}
+.price-none {
+  background-color: rgb(97, 97, 97);
+}
+p.favorite {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+p.favorite > i:hover {
+  color: rgb(53, 106, 219);
 }
