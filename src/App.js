@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { connect } from 'react-redux';
-import {
-  productsRequested,
-  productsLoaded,
-  sellersLoaded,
-  addFavoriteProduct
-} from "./actions";
+// import { connect } from 'react-redux';
+// import {
+//   productsRequested,
+//   productsLoaded,
+//   sellersLoaded,
+//   addFavoriteProduct
+// } from "./actions";
 import Categories from './categories';
+import Slider from "react-slick";
 
 
 function addToFavorite(product) {
@@ -17,18 +18,28 @@ function addToFavorite(product) {
 }
 
 function showProducts(product, formatPrice, sellers) {
+  let settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoPlay: false
+  };
   return (
     <div key={product.id} className="col-md-4 margin-bottom">
       <div className="card">
         <div className="card-img-top">
           <ul className="product-img-sliders">
+            <Slider {...settings} >
             {product.pictures.map((picture, i) => (
-              <li key={i} className="product-img-slider">
+              <li key={i} className="product-img-slider" >
                 <div className="product-img-block">
                   <img src={picture} alt="" className="product-img"/>
                 </div>
               </li>)
             )}
+            </Slider>
           </ul>
         </div>
         <div className="card-body">
@@ -89,7 +100,9 @@ class App extends React.Component {
         keys = Object.keys(localStorage);
     for(let i = 0; i < keys.length; i++) {
       let item = localStorage.getItem(keys[i]);
-      localStorageValues.push(JSON.parse(item));
+      if(item !== "INFO") {
+        localStorageValues.push(JSON.parse(item));
+      }
     }
     this.setState({favorites: localStorageValues});
   }
@@ -100,17 +113,33 @@ class App extends React.Component {
   };
 
   filterFromCategory(e){
+    const {products, favorites} = this.state;
     if(e.target.id === 'all') {
-      this.setState({filtered: this.state.products});
+      this.setState({filtered: products});
+      return;
+    } else if(e.target.id === 'favorites') {
+      let keys = Object.keys(localStorage);
+
+      if(keys.length-1 > favorites.length) {
+        let localStorageValues = [];
+        for(let i = 0; i < keys.length; i++) {
+          let item = localStorage.getItem(keys[i]);
+          if(item !== "INFO") {
+            localStorageValues.push(JSON.parse(item));
+          }
+        }
+        this.setState({favorites: localStorageValues});
+        return;
+      }
+      this.setState({filtered: favorites});
       return;
     }
-    let categFilt = this.state.products.filter(prd => prd.category === e.target.id);
-    this.setState({filtered: categFilt});
-  }
+    let categFilt = products.filter(prd => prd.category === e.target.id);
+    this.setState({sorted: [],filtered: categFilt});
+  };
 
   handleFilterPrice(event){
-    console.log("sorted", this.state.sorted)
-    const products = this.state.sorted.length ?
+    const products = this.state.sorted.length > 0 ?
                       [...this.state.sorted] :
                       this.state.filtered.length > 0 ?
                       [...this.state.filtered] :
@@ -122,37 +151,45 @@ class App extends React.Component {
 
     }
     if(event.target.id === "priceValueFrom") {
+      let arr = products.filter(product => product.price > parseInt(event.target.value));
       this.setState({
         priceValueFrom: event.target.value,
-        filtered: products.filter(product => product.price > parseInt(event.target.value))
+        filtered: arr
       });
 
     } else if(event.target.id === "priceValueTo") {
+      let arr = products.filter(product => product.price < parseInt(event.target.value));
       this.setState({
         priceValueTo: event.target.value,
-        filtered: products.filter(product => product.price < parseInt(event.target.value))
+        filtered: arr
       });
     }
   };
 
   handleShowfiltered = () => {
-    return;
+    return this.setState({filtered: this.state.filtered});
   };
 
   handleSortChange = (e) => {
     console.log(e.target.value)
     const { products, filtered, sorted, sellers} = this.state;
 
-    let sortArr = sorted.length > 0 ? sorted : filtered.length > 0 ? filtered : products;
+    let sortArr = sorted.length > 0 ? [...sorted] : filtered.length > 0 ? [...filtered] : [...products];
     
     if(e.target.value === "popular") {
       let sellersRating = sellers.sort((a, b) => parseFloat(a.rating - b.rating)).reverse();
-      console.log(sellersRating)
-      
+      let arr = [];
+      filtered.map(item => {
+        sellersRating.map(seller => {
+          if(seller.id === item.relationships.seller) {
+            arr.push(item);
+          }
+        })
+      });
       this.setState({
         sortValue: e.target.value,
-        sorted: popularSort
-      })
+        sorted: arr
+      });
 
     } else if(e.target.value === "cheaps") {
 
@@ -226,21 +263,4 @@ class App extends React.Component {
   }
 }
 
-const mapStateToProps = (state) => {
- return {
-   products: state.products
- }
-}
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    requestToUrl: () => dispatch(productsRequested()),
-    loadProductsToStore: (products) => dispatch(productsLoaded(products)),
-    loadSellersToStore: (sellers) => dispatch(sellersLoaded(sellers)),
-    addToFavorites: (favorite) => dispatch(addFavoriteProduct(favorite))
-  }
-}
-export default connect(
-  null,
-  mapDispatchToProps
-)(App);
+export default App;

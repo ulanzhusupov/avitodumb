@@ -42,10 +42,10 @@ p {
 
 /********* Product card ***************/
 .margin-bottom {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 .card {
-  height: 470px;
+  height: 415px;
 }
 .card:hover ~ .product-img-slider::after {
   display: block;
@@ -60,34 +60,28 @@ p {
   min-height: 252px;
   height: 100%;
 }
-.product-img-slider {
-  flex-basis: 50%;
-  justify-content: flex-end;
+.slick-slider, .slick-track {
+  width: 252px;
+  height: 252px;
 }
-.product-img-slider::after {
-  content: '';
-  display: none;
-  width: 100%;
-  height: 2px;
-  margin: 0 1px 2px;
-  background-color: rgba(232,232,232,.8);
-  -webkit-transition: background-color .3s;
-  transition: background-color .3s;
+.slick-arrow {
+  z-index: 5;
 }
-.product-img-slider:first-child > .product-img-block {
-  opacity: 1;
-}
-.product-img-slider:hover {
-  cursor: pointer;
-}
-.product-img-slider:hover ~ .product-img-block {
-  opacity: 1;
+.slick-prev {
   left: 0;
+}
+.slick-next {
+  right: 0;
+}
+.slick-dots {
+  bottom: 0;
+}
+.product-img-slider {
+  height: 252px;
 }
 
 .product-img-block {
   position: absolute;
-  opacity: 0;
   width: 100%;
   height: 100%;
 }

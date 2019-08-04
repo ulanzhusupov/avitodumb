@@ -28,7 +28,7 @@ const Categories = ( {filterFromCategory} ) => {
       'icon': <i className="fa fa-laptop"></i>
     },
     {
-      'short': 'favorite',
+      'short': 'favorites',
       'title': 'Избранные товары',
       'icon': <i className="fa fa-star"></i>
     }
